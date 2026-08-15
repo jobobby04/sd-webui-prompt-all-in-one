@@ -5,10 +5,16 @@ export default (tags, autoBreakBeforeWrap = false, autoBreakAfterWrap = false) =
     let paragraphs = tags.split('\n')
     let result = []
 
-    for (let p of paragraphs) {
+    for (let i = 0; i < paragraphs.length; i++) {
+        let p = paragraphs[i]
         let trimmed = p.trim()
-        if (trimmed === '') {
+        
+        // Add wrap tag before each paragraph (except first) to preserve paragraph boundaries
+        if (i > 0) {
             result.push('\n')
+        }
+        
+        if (trimmed === '') {
             continue
         }
 
@@ -56,8 +62,8 @@ export default (tags, autoBreakBeforeWrap = false, autoBreakAfterWrap = false) =
             let bracketCount = 0
             let tagResult = []
 
-            for (let i = 0; i < length; i++) {
-                const char = temp[i]
+            for (let j = 0; j < length; j++) {
+                const char = temp[j]
                 if (char === "\n") {
                     if (startBracketChar === '') {
                         if (current.trim() !== "") {
