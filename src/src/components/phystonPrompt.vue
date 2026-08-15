@@ -975,7 +975,9 @@ export default {
                     }
                     if (tag.disabled && !ignoreDisabled) return
 
-                    let splitSymbol = ',' + (this.autoRemoveSpace ? '' : ' ')
+                    // Sentence-mode: any text tag ending with period uses space separator
+                    let isSentenceMode = tags2.some(t => t.value.endsWith('.') && t.type !== 'wrap')
+                    let splitSymbol = isSentenceMode ? (this.autoRemoveSpace ? '' : ' ') : (',' + (this.autoRemoveSpace ? '' : ' '))
                     let splitSymbolDefault = splitSymbol
 
                     let nextTag = null
