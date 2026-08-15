@@ -14,7 +14,7 @@ from scripts.physton_prompt.translate import translate
 from scripts.physton_prompt.history import History
 from scripts.physton_prompt.csv import get_csvs, get_csv
 from scripts.physton_prompt.styles import get_style_full_path, get_extension_css_list
-from scripts.physton_prompt.get_extra_networks import get_extra_networks
+from scripts.physton_prompt.get_extra_networks import get_extra_networks, get_extra_networks_dirs, get_extra_networks_items
 from scripts.physton_prompt.get_thumbnail import get_cache_stats, clear_cache
 from scripts.physton_prompt.packages import get_packages_state, install_package
 from scripts.physton_prompt.gen_openai import gen_openai
@@ -369,6 +369,14 @@ def on_app_started(_: gr.Blocks, app: FastAPI):
     @app.get("/physton_prompt/get_extra_networks")
     async def _get_extra_networks(thumbnail_width: int = None, thumbnail_height: int = None):
         return {"extra_networks": get_extra_networks(thumbnail_width=thumbnail_width, thumbnail_height=thumbnail_height)}
+
+    @app.get("/physton_prompt/get_extra_networks_dirs")
+    async def _get_extra_networks_dirs():
+        return {"dirs": get_extra_networks_dirs()}
+
+    @app.get("/physton_prompt/get_extra_networks_items")
+    async def _get_extra_networks_items(name: str = None, dirname: str = None, thumbnail_width: int = None, thumbnail_height: int = None):
+        return {"items": get_extra_networks_items(name=name, dirname=dirname, thumbnail_width=thumbnail_width, thumbnail_height=thumbnail_height)}
 
     @app.get("/physton_prompt/get_thumbnail_stats")
     async def _get_thumbnail_stats():
