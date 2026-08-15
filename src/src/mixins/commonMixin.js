@@ -26,7 +26,7 @@ export default {
             setTimeout(this.loadExtraNetworks, 1000, loadI + 1)
         },
         _loadExtraNetworks() {
-            this.gradioAPI.getExtraNetworks().then(res => {
+            this.gradioAPI.getExtraNetworks(200, 200).then(res => {
                 if (!res) return
                 this.extraNetworks = res
                 res.forEach(extraNetwork => {

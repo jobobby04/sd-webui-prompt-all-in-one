@@ -4,6 +4,7 @@ from modules import script_callbacks, extra_networks, prompt_parser, shared, ui_
 import json
 import os
 import copy
+from urllib.parse import urlparse, parse_qs
 
 filters = [
     # 'filename',
@@ -14,7 +15,53 @@ filters = [
 ]
 
 
-def get_extra_networks():
+def parse_thumb_url(url):
+    if not url or 'thumb?filename=' not in url:
+        return None
+    try:
+        parsed = urlparse(url)
+        params = parse_qs(parsed.query)
+        if 'filename' in params:
+            return params['filename'][0]
+    except Exception as e:
+        pass
+    return None
+
+
+def generate_thumbnail_for_file(file_path, width=200, height=200):
+    from scripts.physton_prompt.get_thumbnail import (
+        generate_thumbnail, get_cache_path, is_cache_valid,
+        get_preview_path, parse_thumb_url
+    )
+    if not file_path:
+        return None
+    cache_path = get_cache_path(file_path, width, height)
+    if is_cache_valid(cache_path):
+        return cache_path
+    try:
+        preview_path = get_preview_path(file_path)
+        if preview_path and os.path.exists(preview_path):
+            generated = generate_thumbnail(preview_path, width, height)
+            if generated:
+                return generated
+        generated = generate_thumbnail(file_path, width, height)
+        return generated
+    except Exception as e:
+        return None
+
+
+def get_thumbnail_url(cache_path, width=200, height=200):
+    if not cache_path:
+        return None
+    import os
+    if os.path.exists(cache_path):
+        cache_filename = os.path.basename(cache_path)
+        return f"/physton_prompt/thumbnail?filename={cache_filename}"
+    return None
+
+
+def get_extra_networks(thumbnail_width=None, thumbnail_height=None):
+    import sys
     result = []
     try:
         for extra_page in ui_extra_networks.extra_pages:
@@ -25,7 +72,7 @@ def get_extra_networks():
             }
             for oriItem in extra_page.list_items():
                 item = copy.deepcopy(oriItem)
-                # 解析metadata
+                # 解析 metadata
                 output_name = None
                 try:
                     if 'metadata' in item and item['metadata']:
@@ -36,7 +83,7 @@ def get_extra_networks():
                     pass
                 item['output_name'] = output_name
 
-                # 获取civitai.info
+                # 获取 civitai.info
                 item['civitai_info'] = {}
                 try:
                     if 'filename' in item and item['filename']:
@@ -65,6 +112,17 @@ def get_extra_networks():
                                 item['civitai_info'] = info
                 except Exception as e:
                     pass
+
+                # Generate thumbnail if requested
+                if thumbnail_width and thumbnail_height:
+                    try:
+                        filename = item.get('filename', '')
+                        if filename:
+                            thumb_path = generate_thumbnail_for_file(filename, int(thumbnail_width), int(thumbnail_height))
+                            if thumb_path:
+                                item['thumbnail'] = get_thumbnail_url(thumb_path, int(thumbnail_width), int(thumbnail_height))
+                    except Exception as e:
+                        pass
 
                 # 过滤掉不需要的字段
                 newItem = {}

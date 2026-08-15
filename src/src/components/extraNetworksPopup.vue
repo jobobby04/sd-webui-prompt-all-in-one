@@ -7,7 +7,7 @@
          v-show="isShow"
          :style="style">
         <div class="popup-main">
-            <img class="info-preview" v-if="data.preview" :src="data.preview" :style="previewStyle" @load="onPreviewLoad"/>
+            <img class="info-preview" v-if="data.preview || data.thumbnail" :src="data.thumbnail || data.preview" :style="previewStyle" loading="lazy" decoding="async" @load="onPreviewLoad"/>
             <div class="info-raws">
                 <div class="info-raw">
                     <div class="raw-name">{{ getLang('model_name') }}</div>
