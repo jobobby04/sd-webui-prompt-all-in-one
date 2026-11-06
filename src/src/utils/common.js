@@ -143,10 +143,11 @@ export default {
      * @param tags {string}
      * @param autoBreakBeforeWrap {boolean}
      * @param autoBreakAfterWrap {boolean}
+     * @param sentenceMode {boolean}
      * @returns {string[]}
      */
-    splitTags(tags, autoBreakBeforeWrap = false, autoBreakAfterWrap = false) {
-        return splitTags(tags, autoBreakBeforeWrap, autoBreakAfterWrap)
+    splitTags(tags, autoBreakBeforeWrap = false, autoBreakAfterWrap = false, sentenceMode = false) {
+        return splitTags(tags, autoBreakBeforeWrap, autoBreakAfterWrap, sentenceMode)
     },
 
     /**

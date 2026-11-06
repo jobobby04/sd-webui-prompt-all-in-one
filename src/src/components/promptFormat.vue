@@ -14,6 +14,12 @@
                 </div>
                 <div class="format-item">
                     <input class="format-checkbox" type="checkbox"
+                           :checked="sentenceMode"
+                           @change="$emit('update:sentenceMode', $event.target.checked)">
+                    <div class="format-desc">Split prose on periods into sentences (off by default; never splits inside () [] {} &lt;&gt; or decimals)</div>
+                </div>
+                <div class="format-item">
+                    <input class="format-checkbox" type="checkbox"
                            :checked="autoRemoveLastComma"
                            @change="$emit('update:autoRemoveLastComma', $event.target.checked)">
                     <div class="format-desc" v-html="getLang('is_remove_last_comma')"></div>
@@ -84,6 +90,10 @@ export default {
             type: Boolean,
             default: false,
         },
+        sentenceMode: {
+            type: Boolean,
+            default: false,
+        },
         autoRemoveLastComma: {
             type: Boolean,
             default: false,
@@ -130,7 +140,7 @@ export default {
             isOpen: false,
         }
     },
-    emits: ['update:autoRemoveSpace', 'update:autoRemoveLastComma', 'update:autoKeepWeightZero', 'update:autoKeepWeightOne', 'update:autoBreakBeforeWrap', 'update:autoBreakAfterWrap', 'update:visualBreakSeparator', 'update:autoRemoveLoraBeforeComma', 'update:autoRemoveLoraAfterComma', 'update:useNovelAiWeightSymbol', 'update:autoRemoveBeforeLineComma'],
+    emits: ['update:autoRemoveSpace', 'update:sentenceMode', 'update:autoRemoveLastComma', 'update:autoKeepWeightZero', 'update:autoKeepWeightOne', 'update:autoBreakBeforeWrap', 'update:autoBreakAfterWrap', 'update:visualBreakSeparator', 'update:autoRemoveLoraBeforeComma', 'update:autoRemoveLoraAfterComma', 'update:useNovelAiWeightSymbol', 'update:autoRemoveBeforeLineComma'],
     computed: {},
     mounted() {
     },

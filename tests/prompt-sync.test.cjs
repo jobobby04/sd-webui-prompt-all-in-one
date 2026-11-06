@@ -184,3 +184,67 @@ test('externally imported blacklisted tags are still removed from the prompt', (
     prompt._onTextareaChange(true)
     assert.equal(prompt.textarea.value, 'blue eyes')
 })
+
+// --- Sentence mode (opt-in) regression tests ---------------------------------
+// The parser must never let a period split a tag that uses the period for
+// something else: weights in () [] {} <>, or decimals such as sd1.5.
+//
+// splitTags and prompt.tags live in a separate vm context, so their arrays carry
+// a different Array.prototype; copy them into a local array before deepStrictEqual.
+function local(values) {
+    return Array.prototype.slice.call(values)
+}
+
+test('splitTags sentence mode: a weighted tag with a decimal in () is not split', () => {
+    assert.deepEqual(local(splitTags('(masterpiece:1.2)', false, false, true)), ['(masterpiece:1.2)'])
+})
+
+test('splitTags sentence mode: decimals in [] {} <> are not split', () => {
+    assert.deepEqual(local(splitTags('[tag:1.5]', false, false, true)), ['[tag:1.5]'])
+    assert.deepEqual(local(splitTags('{tag:2.5}', false, false, true)), ['{tag:2.5}'])
+    assert.deepEqual(local(splitTags('<lora:foo:0.8>', false, false, true)), ['<lora:foo:0.8>'])
+})
+
+test('splitTags sentence mode: a bare decimal like sd1.5 is not split', () => {
+    assert.deepEqual(local(splitTags('sd1.5 style', false, false, true)), ['sd1.5 style'])
+})
+
+test('splitTags sentence mode: a LoRA decimal survives an outside period on the same line', () => {
+    // The period in 0.8 is inside <> and must not split; the period after "cat" does.
+    assert.deepEqual(local(splitTags('<lora:foo:0.8> a cat. a dog', false, false, true)), ['<lora:foo:0.8>', 'a cat.', 'a dog'])
+})
+
+test('splitTags sentence mode: prose splits on periods, no period added to the last sentence', () => {
+    assert.deepEqual(local(splitTags('a cat. a dog. a bird', false, false, true)), ['a cat.', 'a dog.', 'a bird'])
+    // A trailing period is kept as typed; nothing is appended.
+    assert.deepEqual(local(splitTags('a cat. a dog.', false, false, true)), ['a cat.', 'a dog.'])
+})
+
+test('splitTags sentence mode off: periods never split (unchanged tag behavior)', () => {
+    assert.deepEqual(local(splitTags('a cat. a dog, sd1.5 style', false, false, false)), ['a cat. a dog', 'sd1.5 style'])
+    assert.deepEqual(local(splitTags('(masterpiece:1.2)', false, false, false)), ['(masterpiece:1.2)'])
+})
+
+test('sentence mode round-trips prose exactly (no added period, sentences stay separated)', () => {
+    const {prompt} = makePrompt({sentenceMode: true, autoRemoveLastComma: true})
+    prompt.textarea.value = 'a cat. a dog. a bird'
+    prompt._onTextareaChange(true)
+    assert.deepEqual(local(prompt.tags.map(tag => tag.value)), ['a cat.', 'a dog.', 'a bird'])
+    assert.equal(prompt.textarea.value, 'a cat. a dog. a bird')
+})
+
+test('sentence mode keeps sentences separated even with remove-spaces on', () => {
+    const {prompt} = makePrompt({sentenceMode: true, autoRemoveSpace: true, autoRemoveLastComma: true})
+    prompt.textarea.value = 'a cat. a dog'
+    prompt._onTextareaChange(true)
+    assert.deepEqual(local(prompt.tags.map(tag => tag.value)), ['a cat.', 'a dog'])
+    assert.equal(prompt.textarea.value, 'a cat. a dog')
+})
+
+test('sentence mode off leaves a prose prompt untouched (opt-in default)', () => {
+    const {prompt} = makePrompt({sentenceMode: false, autoRemoveLastComma: true})
+    prompt.textarea.value = 'a cat. a dog, sd1.5 style'
+    prompt._onTextareaChange(true)
+    assert.deepEqual(local(prompt.tags.map(tag => tag.value)), ['a cat. a dog', 'sd1.5 style'])
+    assert.equal(prompt.textarea.value, 'a cat. a dog, sd1.5 style')
+})

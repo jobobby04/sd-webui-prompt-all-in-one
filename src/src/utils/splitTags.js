@@ -1,4 +1,4 @@
-export default (tags, autoBreakBeforeWrap = false, autoBreakAfterWrap = false) => {
+export default (tags, autoBreakBeforeWrap = false, autoBreakAfterWrap = false, sentenceMode = false) => {
     if (tags === null || tags === undefined || tags === false || tags === "" || tags.trim() === "") return []
 
     tags = tags.replace(/，/g, ',') // 中文逗号
@@ -64,6 +64,20 @@ export default (tags, autoBreakBeforeWrap = false, autoBreakAfterWrap = false) =
                 temp = ''
             } else {
                 // 前面有括号
+                temp += char
+            }
+        } else if (char === "." && sentenceMode && startBracketChar === '') {
+            // Sentence mode: split on periods, but never inside a decimal (digit.digit)
+            let isDecimal = i > 0 && /\d/.test(tags[i - 1]) && i + 1 < length && /\d/.test(tags[i + 1])
+            if (!isDecimal && temp.trim() !== '') {
+                // Keep the period attached to the preceding segment; no period is added to the last one
+                temp += char
+                result.push(temp.trim())
+                bracketCount = 0
+                startBracketChar = ''
+                endBracketChar = ''
+                temp = ''
+            } else {
                 temp += char
             }
         } else {

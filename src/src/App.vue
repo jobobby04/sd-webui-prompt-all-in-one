@@ -15,6 +15,7 @@
                             v-model:auto-translate-to-english="autoTranslateToEnglish"
                             v-model:auto-translate-to-local="autoTranslateToLocal"
                             v-model:auto-remove-space="autoRemoveSpace"
+                            v-model:sentence-mode="sentenceMode"
                             v-model:auto-remove-last-comma="autoRemoveLastComma"
                             v-model:auto-keep-weight-zero="autoKeepWeightZero"
                             v-model:auto-keep-weight-one="autoKeepWeightOne"
@@ -89,6 +90,7 @@
                        :translate-apis="translateApis"
                        :languages="languages"
                        v-model:auto-remove-space="autoRemoveSpace"
+                       v-model:sentence-mode="sentenceMode"
                        v-model:auto-remove-last-comma="autoRemoveLastComma"
                        v-model:auto-keep-weight-zero="autoKeepWeightZero"
                        v-model:auto-keep-weight-one="autoKeepWeightOne"
@@ -310,6 +312,7 @@ export default {
             autoTranslateToEnglish: false,
             autoTranslateToLocal: false,
             autoRemoveSpace: true,
+            sentenceMode: false,
             autoRemoveLastComma: false,
             autoKeepWeightZero: false,
             autoKeepWeightOne: false,
@@ -428,6 +431,19 @@ export default {
                 if (!this.startWatchSave) return
                 console.log('onAutoRemoveSpaceChange', val)
                 this.gradioAPI.setData('autoRemoveSpace', val).then(data => {
+                    this.prompts.forEach(item => {
+                        this.$refs[item.id][0].updatePrompt()
+                    })
+                }).catch(err => {
+                })
+            },
+            immediate: false,
+        },
+        sentenceMode: {
+            handler: function (val, oldVal) {
+                if (!this.startWatchSave) return
+                console.log('onSentenceModeChange', val)
+                this.gradioAPI.setData('sentenceMode', val).then(data => {
                     this.prompts.forEach(item => {
                         this.$refs[item.id][0].updatePrompt()
                     })
@@ -705,7 +721,7 @@ export default {
         },
         init() {
             this.loadExtraNetworks()
-            let dataListsKeys = ['languageCode', 'autoTranslate', 'autoTranslateToEnglish', 'autoTranslateToLocal', 'autoRemoveSpace', 'autoRemoveLastComma', 'autoKeepWeightZero', 'autoKeepWeightOne', 'autoBreakBeforeWrap', 'autoBreakAfterWrap', 'visualBreakSeparator', 'autoRemoveLoraBeforeComma', 'autoRemoveLoraAfterComma', 'useNovelAiWeightSymbol', 'autoRemoveBeforeLineComma', /*'hideDefaultInput', */'translateApi', 'enableTooltip', 'tagCompleteFile', 'onlyCsvOnAuto', 'extensionSelect.minimalist', 'groupTagsColor', 'groupTagsTranslate', 'blacklist', 'cancelBlacklistConfirm', 'hotkey', 'extraNetworksWidth', 'extraNetworksHeight']
+            let dataListsKeys = ['languageCode', 'autoTranslate', 'autoTranslateToEnglish', 'autoTranslateToLocal', 'autoRemoveSpace', 'sentenceMode', 'autoRemoveLastComma', 'autoKeepWeightZero', 'autoKeepWeightOne', 'autoBreakBeforeWrap', 'autoBreakAfterWrap', 'visualBreakSeparator', 'autoRemoveLoraBeforeComma', 'autoRemoveLoraAfterComma', 'useNovelAiWeightSymbol', 'autoRemoveBeforeLineComma', /*'hideDefaultInput', */'translateApi', 'enableTooltip', 'tagCompleteFile', 'onlyCsvOnAuto', 'extensionSelect.minimalist', 'groupTagsColor', 'groupTagsTranslate', 'blacklist', 'cancelBlacklistConfirm', 'hotkey', 'extraNetworksWidth', 'extraNetworksHeight']
             this.prompts.forEach(item => {
                 dataListsKeys.push(item.hideDefaultInputKey)
                 dataListsKeys.push(item.autoLoadWebuiPromptKey)
@@ -766,6 +782,9 @@ export default {
                 }
                 if (data.autoRemoveSpace !== null) {
                     this.autoRemoveSpace = data.autoRemoveSpace
+                }
+                if (data.sentenceMode !== null) {
+                    this.sentenceMode = data.sentenceMode
                 }
                 if (data.autoRemoveLastComma !== null) {
                     this.autoRemoveLastComma = data.autoRemoveLastComma

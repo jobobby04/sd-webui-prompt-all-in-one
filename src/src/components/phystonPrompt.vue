@@ -631,6 +631,10 @@ export default {
             type: Boolean,
             default: false,
         },
+        sentenceMode: {
+            type: Boolean,
+            default: false,
+        },
         autoRemoveLastComma: {
             type: Boolean,
             default: false,
@@ -764,7 +768,7 @@ export default {
             default: () => ({}),
         }
     },
-    emits: ['update:languageCode', 'update:autoTranslate', 'update:autoTranslateToEnglish', 'update:autoTranslateToLocal', 'update:autoRemoveSpace', 'update:autoRemoveLastComma', 'update:autoKeepWeightZero', 'update:autoKeepWeightOne', 'update:hideDefaultInput', 'update:hidePanel', 'update:enableTooltip', 'update:translateApi', 'click:translateApi', 'click:promptFormat', 'click:blacklist', 'click:hotkey', 'click:selectTheme', 'click:switchTheme', 'click:showAbout', 'click:selectLanguage', 'click:showHistory', 'click:showFavorite', 'refreshFavorites', 'click:showChatgpt', 'update:hideGroupTags', 'update:groupTagsColor', 'update:blacklist', 'showExtraNetworks', 'hideExtraNetworks', 'refreshExtraNetworks', 'update:extraNetworksWidth', 'update:extraNetworksHeight', 'update:autoLoadWebuiPrompt'],
+    emits: ['update:languageCode', 'update:autoTranslate', 'update:autoTranslateToEnglish', 'update:autoTranslateToLocal', 'update:autoRemoveSpace', 'update:sentenceMode', 'update:autoRemoveLastComma', 'update:autoKeepWeightZero', 'update:autoKeepWeightOne', 'update:hideDefaultInput', 'update:hidePanel', 'update:enableTooltip', 'update:translateApi', 'click:translateApi', 'click:promptFormat', 'click:blacklist', 'click:hotkey', 'click:selectTheme', 'click:switchTheme', 'click:showAbout', 'click:selectLanguage', 'click:showHistory', 'click:showFavorite', 'refreshFavorites', 'click:showChatgpt', 'update:hideGroupTags', 'update:groupTagsColor', 'update:blacklist', 'showExtraNetworks', 'hideExtraNetworks', 'refreshExtraNetworks', 'update:extraNetworksWidth', 'update:extraNetworksHeight', 'update:autoLoadWebuiPrompt'],
     data() {
         return {
             prompt: '',
@@ -892,7 +896,7 @@ export default {
 
             let value = this.textarea.value.trim()
             if (value === this.prompt.trim()) return
-            let tags = common.splitTags(value, this.autoBreakBeforeWrap, this.autoBreakAfterWrap)
+            let tags = common.splitTags(value, this.autoBreakBeforeWrap, this.autoBreakAfterWrap, this.sentenceMode)
 
             let disabledTags = []
             this.tags.forEach((tag, index) => {
@@ -997,7 +1001,10 @@ export default {
                     }
                     if (tag.disabled && !ignoreDisabled) return
 
-                    let splitSymbol = ',' + (this.autoRemoveSpace ? '' : ' ')
+                    // In sentence mode, a tag ending in a period is a sentence: keep it separated by a
+                    // space (even with "remove spaces" on) so the prose round-trips. Everything else keeps
+                    // the normal comma separator, so tag prompts are unchanged when sentence mode is off.
+                    let splitSymbol = (this.sentenceMode && tag.value.endsWith('.')) ? ' ' : (',' + (this.autoRemoveSpace ? '' : ' '))
                     let splitSymbolDefault = splitSymbol
 
                     let nextTag = null
@@ -1299,7 +1306,7 @@ export default {
             this.updateTags()
         },
         useChatgpt(prompt) {
-            let tags = common.splitTags(prompt, this.autoBreakBeforeWrap, this.autoBreakAfterWrap)
+            let tags = common.splitTags(prompt, this.autoBreakBeforeWrap, this.autoBreakAfterWrap, this.sentenceMode)
             this.tags = []
             tags.forEach(tag => {
                 this._appendTag(tag, '', false, -1, 'text')
